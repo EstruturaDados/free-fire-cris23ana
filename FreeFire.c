@@ -70,7 +70,7 @@
 // Caso contrário, informa que não encontrou o item.
 
 //----------------------------------------------------------------------------------------------------
-//-DESAFIO FREE-FIRE NOVATO
+//-DESAFIO FREE-FIRE INTERMEDIARIO
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -86,61 +86,141 @@ typedef struct
     int quantidade;
 } Item;
 
-//--criar um vetor de structs (lista sequencial) chamado mochila
+//--criar um vetor de structs (lista sequencial) chamado mochilaSequencial
 typedef struct
 {
     Item mochila[MAX_CAPACIDADE]; //-- 10 itens permitidos
     int totalItens;               //--contador, informa quantos itens estao realmente na lista
-} ListaMochila;
+} ListaMochilaSequencial;
 
-//--prototipaçao de funçoes
-void menuMochila();
+//--criar uma lista encadeada chamada mochilaEncadeada
+typedef struct No{
+    Item dados;
+    struct No* proximo;
+} No;
+
+typedef No *ListaMochilaEncadeada; //isso é um atalho, em vez de escrever No* sempre
+//quisermos nos referir a nossa lista, podemos simplesmente usar ListaMochilaEncadeada,
+//a lista em si é apenas um ponteiro para o primeiro nó (a "cabeca" da lista)
+
+//--contadores globais de comparaçao (sequencial e binaria)
+int comparacaoSequencial = 0;
+int comparacaoBinaria = 0;
+
+//----------------------------PROTOTIPOS DAS FUNCOES
+//--menus e buffer
+void menuVersoes();
+void menuMochilaSequencial();
+void menuMochilaEncadeada();
 void limparBuffer();
-void inicializarItem(ListaMochila *ptrMochila);
-void inserirItem(ListaMochila *ptrMochila, Item novo);
-void removerItem(ListaMochila *ptrMochila);
-void listarItens(ListaMochila *ptrMochila);
-void buscarItens(ListaMochila *ptrMochila);
+
+//--funcoes de lista sequencial
+void inicializarItemSequencial(ListaMochilaSequencial *ptrMochila);
+void inserirItemSequencial(ListaMochilaSequencial *ptrMochila, Item novo);
+void removerItemSequencial(ListaMochilaSequencial *ptrMochila);
+void listarItensSequencial(ListaMochilaSequencial *ptrMochila);
+void buscarItensSequencial(ListaMochilaSequencial *ptrMochila);
+void buscarItensBinario(ListaMochilaSequencial *ptrMochila);
+void ordenarItens(ListaMochilaSequencial *ptrMochila);
+
+//--funcoes de lista encadeada
+void inicializarItemEncadeada(ListaMochilaEncadeada *ptrMochila);
+void inserirItemEncadeada(ListaMochilaEncadeada *ptrMochila, Item novo);
+void removerItemEncadeada(ListaMochilaEncadeada *ptrMochila);
+void listarItensEncadeada(ListaMochilaEncadeada ptrMochila);
+void buscarItensEncadeada(ListaMochilaEncadeada *ptrMochila);
+
+//--liberar memoria da lista encadeada
+void liberarMochilaEncadeada(ListaMochilaEncadeada *ptrMochila); //funcao para limpar a memoria
 
 int main()
 {
-    int opcao;
+    int opcao, versao;
 
-    ListaMochila mochila;
+    ListaMochilaSequencial mochila;
+    ListaMochilaEncadeada lista;
     Item novo;
     //--inicializacao do inventario da mochila
-    inicializarItem(&mochila);
+    inicializarItemSequencial(&mochila);
 
     // laco
     do
     {
-        menuMochila();
-        scanf("%d", &opcao);
+        menuVersoes();
+        scanf("%d", &versao);
         limparBuffer();
 
-        switch (opcao)
-        {
-        case 1:
-            inserirItem(&mochila, novo);
-            listarItens(&mochila);
-            break;
-        case 2:
-            removerItem(&mochila);
-            listarItens(&mochila);
-            break;
-        case 3:
-            listarItens(&mochila);
-            break;
-        case 4:
-            buscarItens(&mochila);
-            break;
-        case 0:
-            printf("\nSaindo...\n");
-            break;
+        if(versao == 1){
 
-        default:
-            printf("\nOpcao invalida. Pressione Enter para tentar novamente.");
-            getchar();
+            menuMochilaSequencial();
+            scanf("%d", &opcao);
+            limparBuffer();
+
+            switch (opcao)
+                {
+                case 1:
+                    inserirItemSequencial(&mochila, novo);
+                    listarItensSequencial(&mochila);
+                    break;
+                case 2:
+                    removerItemSequencial(&mochila);
+                    listarItensSequencial(&mochila);
+                    break;
+                case 3:
+                    listarItensSequencial(&mochila);
+                    break;
+                case 4:
+                    buscarItensSequencial(&mochila);
+                    break;
+                case 5:
+                    buscarItensEncadeada(&lista);
+                    break;
+                case 6:
+                    ordenarItens(&mochila);
+                    break;
+                case 0:
+                    printf("\nSaindo...\n");
+                    break;
+
+                default:
+                    printf("\nOpcao invalida. Pressione Enter para tentar novamente.");
+                    getchar();
+                    break;
+                }
+
+        } else if(versao == 2){
+
+            menuMochilaEncadeada();
+            scanf("%d", &opcao);
+            limparBuffer();
+
+            switch (opcao)
+                {
+                case 1:
+                    inserirItemEncadeada(&lista, novo);
+                    listarItensEncadeada(lista);
+                    break;
+                case 2:
+                    removerItemEncadeada(&lista);
+                    listarItensEncadeada(lista);
+                    break;
+                case 3:
+                    listarItensEncadeada(lista);
+                    break;
+                case 4:
+                    buscarItensEncadeada(&lista);
+                    break;
+                case 0:
+                    printf("\nSaindo...\n");
+                    break;
+
+                default:
+                    printf("\nOpcao invalida. Pressione Enter para tentar novamente.");
+                    getchar();
+                    break;
+                }
+        } else{
+            printf("Opcao invalida. Tente novamente.\n");
             break;
         }
 
@@ -149,15 +229,41 @@ int main()
     return 0;
 }
 
-//--exibe o menu inicial da mochila de sobrevivencia
-void menuMochila(){
-    printf("\n==========================================\n");
-    printf("           MOCHILA DE SOBREVIVENCIA       \n");
-    printf("===========================================\n");
+//--exibe o menu inicial da escolha de versoes
+void menuVersoes(){
+    printf("\n===============================================\n");
+    printf("          MOCHILA DE SOBREVIVENCIA\n");
+    printf("================================================\n");
+    printf("Antes de acessar a sua Mochila, escolha a versao que deseja ver.\n");
+    printf("1. Versao SEQUENCIAL.\n");
+    printf("2. Versao ENCADEADA.\n");
+    printf("Sua escolha: ");
+}
+
+//--exibe o menu da mochila de sobrevivencia
+void menuMochilaSequencial(){
+    printf("\n===============================================\n");
+    printf(" MOCHILA DE SOBREVIVENCIA - VERSAO [SEQUENCIAL]\n");
+    printf("================================================\n");
     printf("1. Adicionar item\n");
     printf("2. Remover item\n");
     printf("3. Listar itens na Mochila\n");
-    printf("4. Buscar item\n");
+    printf("4. Buscar item (Busca Sequencial)\n");
+    printf("5. Buscar item (Busca Binaria)\n");
+    printf("6. Ordenar itens na Mochila.\n");
+    printf("0. Sair\n");
+    printf("-------------------------------------------\n");
+    printf("Escolha uma opcao: ");
+}
+
+void menuMochilaEncadeada(){
+    printf("\n===============================================\n");
+    printf(" MOCHILA DE SOBREVIVENCIA - VERSAO [ENCADEADA]\n");
+    printf("================================================\n");
+    printf("1. Adicionar item\n");
+    printf("2. Remover item\n");
+    printf("3. Listar itens na Mochila\n");
+    printf("4. Buscar item (Busca Sequencial)\n");
     printf("0. Sair\n");
     printf("-------------------------------------------\n");
     printf("Escolha uma opcao: ");
@@ -171,12 +277,13 @@ void limparBuffer()
         ;
 }
 
+//--------------------------------------------LISTA SEQUENCIAL
 //--inicializa a lista sequencial(mochila)
-void inicializarItem(ListaMochila *ptrMochila)
+void inicializarItemSequencial(ListaMochilaSequencial *ptrMochila)
 {
-    ptrMochila->totalItens = 0; 
+    ptrMochila->totalItens = 0;
     for (int i = 0; i < MAX_CAPACIDADE; i++)
-    {//--inicializa todos os valores em 0 ou nulo
+    {
         strcpy(ptrMochila->mochila[i].nome, "");
         strcpy(ptrMochila->mochila[i].tipo, "");
         ptrMochila->mochila[i].quantidade = 0;
@@ -184,7 +291,7 @@ void inicializarItem(ListaMochila *ptrMochila)
 }
 
 //--insere itens na lista da mochila
-void inserirItem(ListaMochila *ptrMochila, Item novo)
+void inserirItemSequencial(ListaMochilaSequencial *ptrMochila, Item novo)
 {
     //--verifica se a capacidade da mochila foi excedida
     if (ptrMochila->totalItens >= MAX_CAPACIDADE)
@@ -218,7 +325,7 @@ void inserirItem(ListaMochila *ptrMochila, Item novo)
     printf("------------------------------------------\n\n");
 }
 
-void removerItem(ListaMochila *ptrMochila)
+void removerItemSequencial(ListaMochilaSequencial *ptrMochila)
 {
     int i, pos = -1;
     if (ptrMochila->totalItens == 0)
@@ -234,8 +341,6 @@ void removerItem(ListaMochila *ptrMochila)
     fgets(nome, sizeof(nome), stdin);
     nome[strcspn(nome, "\n")] = '\0';
 
-    //--para comparar strings, usamos strcmp(string1, string2)
-    //essa funcao retorna 0 se as strings forem identicas, se encontrar, guarda a posicao pos e para o loop
     for (i = 0; i < ptrMochila->totalItens; i++)
     {
         if (strcmp(ptrMochila->mochila[i].nome, nome) == 0)
@@ -257,14 +362,14 @@ void removerItem(ListaMochila *ptrMochila)
     {
         ptrMochila->mochila[i] = ptrMochila->mochila[i + 1];
     }
-    //--atualiza o contador para mostrar que a lsita tem um item a menos
+    //--atualiza o contador
     ptrMochila->totalItens--;
     printf("\n-------------------------------------------\n");
     printf("         Item removido com sucesso.\n");
     printf("-------------------------------------------\n\n");
 }
 
-void listarItens(ListaMochila *ptrMochila)
+void listarItensSequencial(ListaMochilaSequencial *ptrMochila)
 {
     if (ptrMochila->totalItens == 0)
     {
@@ -276,7 +381,7 @@ void listarItens(ListaMochila *ptrMochila)
         for (int i = 0; i < ptrMochila->totalItens; i++)
         {
             printf("\n-------------------------------------------\n");
-            printf("             Itens na Mochila [%d/10] \n", i +1);
+            printf("     Itens na Mochila (Sequencial) [%d/10] \n", i +1);
             printf("-------------------------------------------\n");
             printf("Nome do Item: %s\n", ptrMochila->mochila[i].nome);
             printf("Tipo do Item: %s\n", ptrMochila->mochila[i].tipo);
@@ -284,7 +389,7 @@ void listarItens(ListaMochila *ptrMochila)
         }
 }
 
-void buscarItens(ListaMochila *ptrMochila)
+void buscarItensSequencial(ListaMochilaSequencial *ptrMochila)
 {
     if (ptrMochila->totalItens == 0)
     {
@@ -299,8 +404,10 @@ void buscarItens(ListaMochila *ptrMochila)
     fgets(nome, sizeof(nome), stdin);
     nome[strcspn(nome, "\n")] = '\0';
 
+    comparacaoSequencial = 0;
     for (int i = 0; i < ptrMochila->totalItens; i++)
     {
+        comparacaoSequencial++;
         if (strcmp(ptrMochila->mochila[i].nome, nome) == 0)
         {
             printf("\n-------------------------------------------\n");
@@ -309,10 +416,225 @@ void buscarItens(ListaMochila *ptrMochila)
             printf("Nome do item: %s\n", ptrMochila->mochila[i].nome);
             printf("Tipo do item: %s\n", ptrMochila->mochila[i].tipo);
             printf("Quantidade: %d\n", ptrMochila->mochila[i].quantidade);
+            printf("Comparacoes: %d\n", comparacaoSequencial);
             return;
         }
     }
     printf("-------------------------------------------\n");
     printf("    Item nao encontrado. Tente novamente.\n");
     printf("-------------------------------------------\n");
+}
+
+void buscarItensBinario(ListaMochilaSequencial *ptrMochila)
+{
+    if (ptrMochila->totalItens == 0)
+    {
+        printf("-------------------------------------------\n");
+        printf("               Lista vazia.\n");
+        printf("-------------------------------------------\n\n");
+        return;
+    }
+
+    char nome[30];
+    printf("Digite o nome do item para buscar: ");
+    fgets(nome, sizeof(nome), stdin);
+    nome[strcspn(nome, "\n")] = '\0';
+
+    int inicio = 0;
+    int fim = ptrMochila->totalItens - 1;
+    int meio;
+    comparacaoBinaria = 0;
+
+    while(inicio <= fim){
+        //--calcula o indice do meio
+        //--usar inicio + (fim - inicio) / 2 evita overflow para listas muito grandes
+        meio = inicio + (fim - inicio) / 2;
+        comparacaoBinaria++;
+
+        int comparacao = strcmp(ptrMochila->mochila[meio].nome, nome);
+
+        if(comparacao == 0){
+            printf("\n-------------------------------------------\n");
+            printf("             Item encontrado!\n");
+            printf("-------------------------------------------\n");
+            printf("Nome do item: %s\n", ptrMochila->mochila[meio].nome);
+            printf("Tipo do item: %s\n", ptrMochila->mochila[meio].tipo);
+            printf("Quantidade: %d\n", ptrMochila->mochila[meio].quantidade);
+            printf("Comparacoes: %d\n", comparacaoSequencial);
+            return;
+        } else if(comparacao > 0){
+            fim = meio - 1;
+        } else{
+            inicio = meio + 1;
+        }
+    }
+
+    printf("-------------------------------------------\n");
+    printf("    Item nao encontrado. Tente novamente.\n");
+    printf("-------------------------------------------\n");
+}
+
+void ordenarItens(ListaMochilaSequencial *ptrMochila){
+        comparacaoBinaria = 0;
+    for (int i = 0; i < ptrMochila->totalItens - 1; i++) {
+        for (int j = 0; j < ptrMochila->totalItens - i - 1; j++) {
+            comparacaoBinaria++;
+            if (strcmp(ptrMochila->mochila[j].nome, ptrMochila->mochila[j + 1].nome) > 0) {
+                Item temp = ptrMochila->mochila[j];
+                ptrMochila->mochila[j] = ptrMochila->mochila[j + 1];
+                ptrMochila->mochila[j + 1] = temp;
+            }
+        }
+    }
+    printf("-------------------------------------------\n");
+    printf("       Mochila ordenada com sucesso!\n");
+    printf("-------------------------------------------\n");
+    printf("Comparacoes: %d\n", comparacaoBinaria);
+}
+
+//--------------------------------------------LISTA ENCADEADA
+void inicializarItemEncadeada(ListaMochilaEncadeada *ptrMochila){
+    *ptrMochila = NULL;
+}
+
+void inserirItemEncadeada(ListaMochilaEncadeada *ptrMochila, Item novo){
+
+    //--cadastro de itens
+    printf("\n-------------------------------------------\n");
+    printf("              Adicionar Item \n");
+    printf("-------------------------------------------\n\n");
+
+    printf("Digite o nome do item: ");
+    fgets(novo.nome, sizeof(novo.nome), stdin);
+    novo.nome[strcspn(novo.nome, "\n")] = '\0';
+
+    printf("Digite o tipo do item (ex: arma, municao, cura, etc): ");
+    fgets(novo.tipo, sizeof(novo.tipo), stdin);
+    novo.tipo[strcspn(novo.tipo, "\n")] = '\0';
+
+    printf("Quantidade: ");
+    scanf("%d", &novo.quantidade);
+    limparBuffer();
+
+    //--alocar memoria para o NOVO NÓ; nonoNo agora para essa memoria
+    No *novoNo = (No*) malloc(sizeof(No));
+
+    if(novoNo == NULL){
+        printf("Falha ao alocar memoria.\n");
+        return;
+    }
+
+    novoNo->dados = novo;
+    novoNo->proximo = *ptrMochila;
+    *ptrMochila = novoNo;
+
+    printf("\n------------------------------------------\n");
+    printf("       Item adicionado com sucesso!\n");
+    printf("------------------------------------------\n\n");
+}
+
+void removerItemEncadeada(ListaMochilaEncadeada *ptrMochila){
+    char nome[30];
+    printf("Digite o nome do item a ser removido: ");
+    fgets(nome, sizeof(nome), stdin);
+    nome[strcspn(nome, "\n")] = '\0';
+
+    //usamos dois ponteiros, atual e anterior, para percorrer a lista. atual avança e anterior o segue
+    //paramos quando atual aponta para o no a ser removido
+    No *atual = *ptrMochila;
+    No *anterior = NULL;
+
+    while(atual != NULL && strcmp(atual->dados.nome, nome) != 0){
+        anterior = atual;
+        atual = atual->proximo;
+    }
+
+    if(atual == NULL){
+        printf("Erro: Item \"%s\" nao encontrado\n", nome);
+        return;
+    }
+
+    /*
+    se o no a ser removido for o primeiro (anterior == NULL), a cabeça da lista (*lista) passa a ser o segundo
+    (atual). se estiver no meio/fim, o ponteiro proximo do no anterior "pula" o atual e aponta para
+    atual->proximo*/
+    if(anterior == NULL){
+        *ptrMochila = atual->proximo;
+    } else{
+        anterior->proximo = atual->proximo;
+    }
+
+    /*
+    liberacao de memoria
+    primeiro, free(atual->dado): libera a memoria que foi usada para guardar o texto
+    depois, free(atual): libera a memoria do proprio no. nao pode fazer ao contrario*/
+    //ANTES de liberar o no, precismao liberar a string DENTRO dele
+    free(atual->dados.nome);
+    //AGORA podemos liberar o no
+    free(atual);
+    printf("Item %s removido com sucesso\n", nome);
+}
+
+void listarItensEncadeada(ListaMochilaEncadeada ptrMochila){
+    No *temp = ptrMochila;
+    if(temp == NULL){
+        printf("\n-------------------------------------------\n");
+        printf("         Sua mochila esta vazia.\n");
+        printf("-------------------------------------------\n");
+        return;
+    }
+    
+    int i = 0;
+    while (temp != NULL){
+        printf("\n-------------------------------------------\n");
+        printf("         Itens na Mochila (Encadeada) [%d/10] \n", i +1);
+        printf("-------------------------------------------\n");
+        printf("Nome do Item: %s\n", temp->dados.nome);
+        printf("Tipo do Item: %s\n", temp->dados.tipo);
+        printf("Quantidade: %d\n\n", temp->dados.quantidade);
+
+        temp = temp->proximo;
+    }
+
+}
+void buscarItensEncadeada(ListaMochilaEncadeada *ptrMochila){
+
+    No *atual = *ptrMochila;
+
+    char nome[30];
+    printf("Digite o nome do item para buscar: ");
+    fgets(nome, sizeof(nome), stdin);
+    nome[strcspn(nome, "\n")] = '\0';
+
+    comparacaoSequencial = 0;
+
+    while(atual != NULL){
+        comparacaoSequencial++;
+        if(strcmp(atual->dados.nome, nome) == 0){
+            printf("\n-------------------------------------------\n");
+            printf("             Item encontrado!\n");
+            printf("-------------------------------------------\n");
+            printf("Nome do item: %s\n", atual->dados.nome);
+            printf("Tipo do item: %s\n", atual->dados.tipo);
+            printf("Quantidade: %d\n", atual->dados.quantidade);
+            printf("Comparacoes: %d\n", comparacaoSequencial);
+            return;
+        }
+        atual = atual->proximo;
+    }
+
+    printf("-------------------------------------------\n");
+    printf("    Item nao encontrado. Tente novamente.\n");
+    printf("-------------------------------------------\n");
+}
+
+//funcao para liberar toda a memoria da lista encadeada no final
+void liberarMochilaEncadeada(ListaMochilaEncadeada *ptrMochila){
+    No *atual = *ptrMochila;
+    No *proximo;
+    while(atual != NULL){
+        proximo = atual->proximo;
+        free(atual->dados.nome);//libera a string
+        free(atual);//libera o no
+    }
 }
